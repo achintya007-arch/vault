@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls C:/CSE_Projects/Vault/frontend/next.config*)",
+      "Bash(npm show:*)",
+      "Bash(node -e ' *)"
+    ]
+  }
+}

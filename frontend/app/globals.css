@@ -1,0 +1,135 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base ──────────────────────────────────────────────────────────────────── */
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  /* Prevent elastic overscroll on iOS from showing a white flash */
+  background-color: #0A0A0A;
+  /* Use dynamic viewport height so nav bars don't eat content */
+  height: -webkit-fill-available;
+}
+
+body {
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  /* Smooth font rendering on macOS/iOS */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Disable tap highlight on iOS */
+  -webkit-tap-highlight-color: transparent;
+  /* Prevent text size adjustment on orientation change */
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+
+/* ── Safe area utilities ────────────────────────────────────────────────────── */
+
+@layer utilities {
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pt-safe-offset {
+    /* status bar + extra breathing room */
+    padding-top: calc(env(safe-area-inset-top) + 0.75rem);
+  }
+  /* Push content above the fixed bottom nav */
+  .pb-nav {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom) + 1rem);
+  }
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────────── */
+
+/* Hide scrollbar on mobile webkit (still scrollable) */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Keyframes ──────────────────────────────────────────────────────────────── */
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* Shimmer — sweeping highlight for skeleton loaders */
+@keyframes shimmer {
+  0%   { background-position:  200% center; }
+  100% { background-position: -200% center; }
+}
+
+/* ── Focus styles ───────────────────────────────────────────────────────────── */
+
+/* Replace browser default blue outline with accent ring */
+*:focus-visible {
+  outline: 2px solid rgba(124, 58, 237, 0.7);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ── Typography ─────────────────────────────────────────────────────────────── */
+
+@layer base {
+  body {
+    @apply bg-void text-label-primary;
+  }
+
+  h1, h2, h3 {
+    @apply tracking-tight;
+  }
+}
+
+/* ── Component helpers ──────────────────────────────────────────────────────── */
+
+@layer components {
+  /* Frosted-glass bottom nav backdrop */
+  .glass {
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    background-color: rgba(10, 10, 10, 0.85);
+  }
+
+  /* Subtle inner border for cards */
+  .card-border {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+
+  /* Tappable area expansion (keeps hit target large on mobile) */
+  .tap-target {
+    position: relative;
+  }
+  .tap-target::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+  }
+
+  /* Income / expense amount colours */
+  .amount-income  { @apply text-income; }
+  .amount-expense { @apply text-expense; }
+
+  /* Shimmer skeleton — replaces flat animate-pulse */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      #2C2C2E 25%,
+      #3A3A3C 50%,
+      #2C2C2E 75%
+    );
+    background-size: 400% 100%;
+    animation: shimmer 1.6s ease-in-out infinite;
+  }
+}
