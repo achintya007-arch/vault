@@ -315,11 +315,11 @@ function InsightsStrip({
   const { Icon } = paceMeta
 
   // Confidence: projection is unreliable in first 6 days
-  const isEarlyEstimate   = insights.elapsed_days < 7
-  // Weekday/weekend split is active when we have both types
-  const hasSplitModel     = insights.weekdays_elapsed >= 2 && insights.weekend_days_elapsed >= 1
-                         || insights.weekdays_elapsed >= 1 && insights.weekend_days_elapsed >= 2
-  const modelNote = hasSplitModel ? 'wk/wknd model' : `${insights.elapsed_days}d avg`
+  const isEarlyEstimate = insights.elapsed_days < 7
+  // Weekday/weekend split model is meaningful once we have ≥2 of one type and ≥1 of the other
+  const hasSplitModel   = (insights.weekdays_elapsed >= 2 && insights.weekend_days_elapsed >= 1)
+                       || (insights.weekdays_elapsed >= 1 && insights.weekend_days_elapsed >= 2)
+  const modelNote       = hasSplitModel ? 'wk/wknd model' : `${insights.elapsed_days}d avg`
 
   // Top category as % of total budget
   const topCatBudgetPct = insights.top_category
@@ -327,11 +327,12 @@ function InsightsStrip({
     : 0
 
   // Daily pace: ratio of actual avg to target daily rate
-  const paceRatio       = targetDailySpend > 0 ? insights.daily_avg / targetDailySpend : 0
-  const paceBarPct      = Math.min(paceRatio * 100, 200)   // cap visual at 2×
-  const paceColor       = paceRatio <= 1.0  ? '#34D399'
-                        : paceRatio <= 1.25 ? '#FBBF24'
-                        : '#F87171'
+  // Bar maps the range [0, 2×] to [0%, 100%] so 1× target always sits at the 50% tick
+  const paceRatio  = targetDailySpend > 0 ? insights.daily_avg / targetDailySpend : 0
+  const paceBarW   = `${Math.min((paceRatio / 2) * 100, 100).toFixed(1)}%`
+  const paceColor  = paceRatio <= 1.0  ? '#34D399'
+                   : paceRatio <= 1.25 ? '#FBBF24'
+                   : '#F87171'
 
   return (
     <>
@@ -418,26 +419,17 @@ function InsightsStrip({
           <p className="text-[10px] text-label-tertiary tabular-nums mt-0.5">
             target {formatINR(targetDailySpend, true)}
           </p>
-          {/* Comparison bar: actual vs target */}
-          <div className="mt-1.5 h-[3px] rounded-full bg-white/[0.07] overflow-hidden">
+          {/* Comparison bar: fill of 50% = exactly on target (1× rate) */}
+          <div className="relative mt-1.5 h-[3px] rounded-full bg-white/[0.07] overflow-hidden">
             <div
               className="h-full rounded-full transition-[width] duration-700 ease-out"
-              style={{
-                width: `${Math.min(paceBarPct / 2, 100)}%`,   // /2 because we cap at 200% → maps to 100% width
-                background: paceColor,
-                opacity: 0.7,
-              }}
+              style={{ width: paceBarW, background: paceColor, opacity: 0.75 }}
             />
-          </div>
-          {/* Ghost bar at 50% = target */}
-          <div
-            className="relative -mt-[3px] h-[3px] rounded-full overflow-hidden pointer-events-none"
-            style={{ background: 'transparent' }}
-          >
+            {/* Target notch at 50% — the "on budget" mark */}
             <div
               aria-hidden
-              className="absolute top-0 w-[1.5px] h-full bg-white/25"
-              style={{ left: '50%' }}   // 50% = 1× target = the "on budget" mark
+              className="absolute inset-y-0 w-[1.5px] bg-white/30 z-10"
+              style={{ left: '50%' }}
             />
           </div>
         </div>

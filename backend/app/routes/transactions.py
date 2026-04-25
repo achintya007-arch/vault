@@ -12,12 +12,24 @@ router = APIRouter(prefix="/transactions", tags=["transactions"])
 
 @router.post("/", response_model=TransactionOut, status_code=201)
 def create_transaction(payload: TransactionCreate, db: Session = Depends(get_db)):
+    # ── Idempotency: return existing transaction if client_id already seen ──
+    if payload.client_id:
+        existing = (
+            db.query(Transaction)
+            .options(joinedload(Transaction.category))
+            .filter(Transaction.client_id == payload.client_id)
+            .first()
+        )
+        if existing:
+            return existing
+
     tx = Transaction(
         amount=payload.amount,
         kind=payload.kind,
         category_id=payload.category_id,
         note=payload.note or "",
         date=payload.date or date.today(),
+        client_id=payload.client_id,
     )
     db.add(tx)
     db.commit()

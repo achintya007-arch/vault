@@ -10,6 +10,13 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'data', 'vault.db')}")
 
+# Ensure the data directory exists (important on Railway where the dir may not
+# be present until a persistent volume is mounted and the container first starts)
+if DATABASE_URL.startswith("sqlite:///"):
+    _db_path = DATABASE_URL.replace("sqlite:///", "")
+    _db_dir  = os.path.dirname(os.path.abspath(_db_path))
+    os.makedirs(_db_dir, exist_ok=True)
+
 engine = create_engine(
     DATABASE_URL,
     connect_args={"check_same_thread": False},  # required for SQLite + FastAPI

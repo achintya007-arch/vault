@@ -14,5 +14,8 @@ class Transaction(Base):
     note        = Column(String, nullable=True, default="")
     date        = Column(Date, nullable=False, default=date.today)
     created_at  = Column(DateTime, nullable=False, default=datetime.utcnow)
+    # Idempotency key set by the client for offline-first duplicate prevention.
+    # A second POST with the same client_id returns the existing transaction.
+    client_id   = Column(String(36), nullable=True, unique=True, index=True)
 
     category = relationship("Category", back_populates="transactions")

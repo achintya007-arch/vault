@@ -1,14 +1,15 @@
-// Vault Service Worker — v1
-// Strategy: cache-first for static assets, network-first for API calls.
+// Vault Service Worker — v2
+// Strategy: cache-first for static assets, network-first for navigation + API calls.
+// API origin is intentionally NOT hardcoded — cross-origin requests (to any external
+// domain) are always handled network-first with no caching, so this works with any
+// backend URL (localhost in dev, Railway in production).
 
-const CACHE_VERSION = 'vault-v1'
-const API_ORIGIN    = 'http://localhost:8000'
+const CACHE_VERSION = 'vault-v2'
 
 // Static assets to pre-cache on install
 const PRECACHE_URLS = [
   '/',
   '/transactions',
-  '/goals',
   '/manifest.json',
   '/icons/icon.svg',
 ]
@@ -47,13 +48,14 @@ self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
 
-  // 1. API calls → network-first (fall back to nothing; offline handled in app)
-  if (url.origin === API_ORIGIN || url.pathname.startsWith('/api/')) {
-    event.respondWith(networkFirst(request))
+  // 1. Cross-origin requests (API on different domain) → pure network passthrough.
+  //    Do NOT cache API responses; the app handles offline state itself.
+  if (url.origin !== self.location.origin) {
+    // Just let the browser handle it — no event.respondWith means default behavior.
     return
   }
 
-  // 2. Navigation requests → network-first so updates deploy cleanly
+  // 2. Navigation requests → network-first so deployments propagate cleanly
   if (request.mode === 'navigate') {
     event.respondWith(networkFirst(request))
     return
@@ -68,7 +70,6 @@ self.addEventListener('fetch', (event) => {
 async function networkFirst(request) {
   try {
     const response = await fetch(request)
-    // Cache successful GET responses for offline fallback
     if (request.method === 'GET' && response.ok) {
       const cache = await caches.open(CACHE_VERSION)
       cache.put(request, response.clone())

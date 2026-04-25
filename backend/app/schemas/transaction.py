@@ -9,7 +9,8 @@ class TransactionCreate(BaseModel):
     kind:        str          # "income" | "expense"
     category_id: int
     note:        Optional[str] = ""
-    date:        Optional[date] = None  # defaults to today server-side
+    date:        Optional[date] = None   # defaults to today server-side
+    client_id:   Optional[str] = None   # UUID set by client for offline idempotency
 
     @field_validator("kind")
     @classmethod
@@ -56,5 +57,6 @@ class TransactionOut(BaseModel):
     date:       date
     created_at: datetime
     category:   CategoryOut
+    client_id:  Optional[str] = None
 
     model_config = {"from_attributes": True}
