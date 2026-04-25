@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { X, ChevronDown, ChevronUp, Check, Loader2 } from 'lucide-react'
 import { cn, formatINR } from '@/lib/utils'
 import { useQuickAdd } from '@/context/QuickAddContext'
@@ -88,11 +89,8 @@ export function QuickAddSheet() {
     }
   }, [isOpen]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Lock body scroll while sheet is open ────────────────────────────────────
-  useEffect(() => {
-    document.body.style.overflow = isOpen ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
-  }, [isOpen])
+  // ── Lock body scroll while sheet is open (iOS-safe: position:fixed) ─────────
+  useBodyScrollLock(isOpen)
 
   // ── Keypad handler ──────────────────────────────────────────────────────────
   function handleKey(key: KeypadKey) {
@@ -187,7 +185,7 @@ export function QuickAddSheet() {
         aria-modal="true"
         aria-label="Add transaction"
         className={cn(
-          'fixed inset-x-0 bottom-0 z-50 flex flex-col max-h-[93dvh]',
+          'fixed inset-x-0 bottom-0 z-50 flex flex-col max-h-[93svh]',
           'bg-[#161618] rounded-t-[28px]',
           'shadow-[0_-4px_40px_rgba(0,0,0,0.6)]',
           'transition-transform duration-300 ease-out will-change-transform',
@@ -214,8 +212,11 @@ export function QuickAddSheet() {
           <div className="w-8" aria-hidden />
         </div>
 
-        {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto scrollbar-hide">
+        {/* Scrollable body — min-h-0 is critical on iOS: allows flex-1 to
+            shrink below its content size so the keypad (flex-shrink-0) is
+            never pushed off-screen or clipped */}
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-hide"
+             style={{ WebkitOverflowScrolling: 'touch' }}>
 
           {/* ── Recent chips ──────────────────────────────────────────────── */}
           {recentEntries.length > 0 && (

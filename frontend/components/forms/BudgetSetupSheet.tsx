@@ -6,6 +6,7 @@ import { cn, formatINR } from '@/lib/utils'
 import { api, type Budget } from '@/lib/api'
 import { Keypad, type KeypadKey } from './Keypad'
 import { applyKey, formatDisplay, parseAmount, toRawString } from '@/lib/keypad'
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -35,6 +36,9 @@ export function BudgetSetupSheet({
 
   const isEditing = existing !== null
 
+  // iOS-safe body scroll lock (overflow:hidden doesn't work on Safari)
+  useBodyScrollLock(isOpen)
+
   // Populate from existing budget when opening
   useEffect(() => {
     if (isOpen) {
@@ -43,18 +47,12 @@ export function BudgetSetupSheet({
     }
   }, [isOpen, existing])
 
-  // Lock scroll
-  useEffect(() => {
-    document.body.style.overflow = isOpen ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
-  }, [isOpen])
-
   function handleKey(key: KeypadKey) {
     setRawAmount((prev) => applyKey(prev, key))
   }
 
-  const amount   = parseAmount(rawAmount)
-  const canSave  = amount > 0 && status === 'idle'
+  const amount    = parseAmount(rawAmount)
+  const canSave   = amount > 0 && status === 'idle'
   const unchanged = isEditing && existing !== null && amount === existing.monthly_limit
 
   async function handleSave() {
@@ -107,13 +105,13 @@ export function BudgetSetupSheet({
         )}
       />
 
-      {/* Sheet */}
+      {/* Sheet — no max-h so flex-shrink-0 keypad never clips */}
       <div
         role="dialog"
         aria-modal="true"
         aria-label={isEditing ? 'Edit monthly budget' : 'Set monthly budget'}
         className={cn(
-          'fixed inset-x-0 bottom-0 z-50 flex flex-col max-h-[85dvh]',
+          'fixed inset-x-0 bottom-0 z-50 flex flex-col',
           'bg-[#161618] rounded-t-[28px]',
           'shadow-[0_-4px_40px_rgba(0,0,0,0.6)]',
           'transition-transform duration-300 ease-out will-change-transform',
@@ -206,7 +204,7 @@ export function BudgetSetupSheet({
           )}
         </div>
 
-        {/* Keypad */}
+        {/* Keypad — pb-safe keeps buttons above home indicator */}
         <div className="flex-shrink-0 pb-safe">
           <Keypad onKey={handleKey} />
         </div>

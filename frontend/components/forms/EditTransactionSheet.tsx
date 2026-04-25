@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { X, Check, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useCategories } from '@/hooks/useCategories'
@@ -54,11 +55,8 @@ export function EditTransactionSheet({ tx, onClose, onSaved }: EditTransactionSh
   const kind = tx?.kind ?? 'expense'
   const { categories, loading: catLoading } = useCategories(kind)
 
-  // ── Lock body scroll while open ──────────────────────────────────────────────
-  useEffect(() => {
-    document.body.style.overflow = isOpen ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
-  }, [isOpen])
+  // ── Lock body scroll while open (iOS-safe: position:fixed) ─────────────────
+  useBodyScrollLock(isOpen)
 
   // ── Keypad ────────────────────────────────────────────────────────────────────
   function handleKey(key: KeypadKey) {
@@ -130,7 +128,7 @@ export function EditTransactionSheet({ tx, onClose, onSaved }: EditTransactionSh
         className={cn(
           'fixed inset-x-0 bottom-0 z-50',
           'flex flex-col',
-          'max-h-[93dvh]',
+          'max-h-[93svh]',
           'bg-[#161618] rounded-t-[28px]',
           'shadow-[0_-4px_40px_rgba(0,0,0,0.6)]',
           'transition-transform duration-300 ease-out will-change-transform',
@@ -159,8 +157,9 @@ export function EditTransactionSheet({ tx, onClose, onSaved }: EditTransactionSh
           <div className="w-8" aria-hidden />
         </div>
 
-        {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto scrollbar-hide">
+        {/* Scrollable body — min-h-0 lets flex-1 shrink so keypad stays visible */}
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-hide"
+             style={{ WebkitOverflowScrolling: 'touch' }}>
 
           {/* Amount display */}
           <div className="flex flex-col items-center px-6 pt-3 pb-4">
