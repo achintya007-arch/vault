@@ -48,7 +48,7 @@ export function useRecentEntries(): Transaction[] {
         // Since the API returns newest-first, first = most recent.
         const seen = new Set<string>()
         const deduped = txs.filter((tx) => {
-          const k = `${tx.category_id}:${tx.amount}`
+          const k = `${tx.category.id}:${tx.amount}`
           if (seen.has(k)) return false
           seen.add(k)
           return true

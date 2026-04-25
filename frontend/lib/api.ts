@@ -41,6 +41,7 @@ export interface Transaction {
   date:       string
   created_at: string
   category:   Category
+  client_id:  string | null
 }
 
 export interface Budget {

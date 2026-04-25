@@ -185,14 +185,16 @@ export function BudgetSetupSheet({
           </button>
 
           {/* Delete budget (only when editing) */}
-          {isEditing && status === 'idle' && (
+          {isEditing && (status === 'idle' || status === 'deleting') && (
             <button
               type="button"
               onClick={handleDelete}
+              disabled={status === 'deleting'}
               className={cn(
                 'w-full mt-2 h-10 rounded-xl flex items-center justify-center gap-1.5',
                 'text-[13px] font-medium text-expense/70',
                 'active:text-expense transition-colors',
+                status === 'deleting' && 'opacity-60',
               )}
             >
               {status === 'deleting'

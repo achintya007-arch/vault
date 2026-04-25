@@ -226,7 +226,7 @@ export function QuickAddSheet() {
               <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-5 px-5 pb-0.5">
                 {recentEntries.map((tx) => (
                   <button
-                    key={`${tx.category_id}:${tx.amount}`}
+                    key={`${tx.category.id}:${tx.amount}`}
                     onPointerDown={(e) => { e.preventDefault(); handleRecentChip(tx) }}
                     className={cn(
                       'flex-shrink-0 flex items-center gap-2',
